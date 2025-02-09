@@ -1,0 +1,25 @@
+- name: Install UFW (if needed)
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+
+- name: Allow HTTP and HTTPS traffic
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ item }}"
+    jump: ACCEPT
+  loop:
+    - 80
+    - 443
+
+- name: Enable UFW and allow SSH
+  ansible.builtin.command: ufw allow OpenSSH
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+
+- name: Enable UFW without confirmation
+  ansible.builtin.command: ufw --force enable
+  become: true
+  register: ufw_enable
+  changed_when: "'Firewall is active' in ufw_enable.stdout"

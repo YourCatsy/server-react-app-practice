@@ -1,0 +1,41 @@
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+  when: ansible_distribution in ["Ubuntu", "Debian"]
+
+- name: Install Nginx on Oracle Linux
+  ansible.builtin.dnf:
+    name: nginx
+    state: present
+  when: ansible_distribution == "OracleLinux"
+  register: nginx_install
+  ignore_errors: true
+
+- name: Create SSL directory
+  ansible.builtin.file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: '0700'
+
+- name: Generate self-signed SSL certificate
+  command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt
+    -subj "/CN=192.168.0.104"
+  args:
+    creates: /etc/nginx/ssl/nginx.crt
+
+- name: Copy Nginx config
+  ansible.builtin.template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/sites-available/react
+
+- name: Enable Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/react
+    dest: /etc/nginx/sites-enabled/react
+    state: link
+
+- name: Restart Nginx after all changes
+  ansible.builtin.meta: flush_handlers

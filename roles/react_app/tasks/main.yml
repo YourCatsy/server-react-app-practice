@@ -1,0 +1,15 @@
+- name: Create React directory
+  ansible.builtin.file:
+    path: /home/server/react-app
+    state: directory
+    owner: server
+    group: server
+    mode: '0755'
+
+- name: Copy React build to server
+  ansible.builtin.copy:
+    src: dist/
+    dest: /home/server/react-app/
+    owner: server
+    group: server
+    mode: '0755'
