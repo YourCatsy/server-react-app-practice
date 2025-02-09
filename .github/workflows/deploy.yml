@@ -21,11 +21,15 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 192.168.0.104 >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/server_ssh.pem
+          chmod 600 ~/.ssh/server_ssh.pem
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/server_ssh.pem
 
+      - name: Добавление ключа сервера в known_hosts
+        run: |
+          ssh-keyscan -H 192.168.0.104 >> ~/.ssh/known_hosts
 
       - name: Run Ansible Playbook
         run: |
